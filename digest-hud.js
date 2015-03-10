@@ -143,14 +143,15 @@ angular.module('digestHud', [])
         return row;
       });
       detailsElement.empty();
+      $('<div>\u2007Total\u2007\u2007\u2007Watch\u2007Work\u2007Overhead\u2007\u2007Function</div>')
+        .css({borderBottom: '1px solid'}).appendTo(detailsElement);
       detailsElement.append(rows);
-      $('<div></div>').text(
-        'Top ' + topWatchTimings.length + ' items account for ' +
-        percentage(topTotal / grandTotal) + ' of ' + grandTotal + 'ms of digest processing time.'
-      ).appendTo(detailsElement);
-      detailsText = _.map(lines, function(text) {
+      var footer = 'Top ' + topWatchTimings.length + ' items account for ' +
+        percentage(topTotal / grandTotal) + ' of ' + grandTotal + 'ms of digest processing time.';
+      $('<div></div>').text(footer).appendTo(detailsElement);
+      detailsText = 'Total  Watch   Work Overhead  Function\n' + _.map(lines, function(text) {
         return text.replace(/[ \n]+/g, ' ');
-      }).join('\n') + '\n';
+      }).join('\n') + '\n' + footer + '\n';
     }
 
     function resetTimings() {
@@ -176,8 +177,8 @@ angular.module('digestHud', [])
 
       function instrumentedDigest() {
         // jshint validthis:true
-        this.$$postDigest(flushTimingCycle);
         timingStack = [];
+        this.$$postDigest(flushTimingCycle);
         var start = Date.now();
         inDigest = true;
         try {
@@ -215,7 +216,9 @@ angular.module('digestHud', [])
 
       function instrumentedPostDigest(fn) {
         // jshint validthis:true
-        if (timingStack.length) fn = wrapExpression(fn, _.last(timingStack), 'handle', true, true);
+        if (timingStack.length) {
+          fn = wrapExpression(fn, _.last(timingStack), 'overhead', true, true);
+        }
         originalPostDigest.call(this, fn);
       }
 
