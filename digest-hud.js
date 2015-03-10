@@ -163,12 +163,14 @@ angular.module('digestHud', [])
       var originalDigest = proto.$digest;
       var originalEvalAsync = proto.$evalAsync;
       var originalApplyAsync = proto.$applyAsync;
+      var originalPostDigest = proto.$$postDigest;
       var originalWatch = proto.$watch;
       var originalWatchGroup = proto.$watchGroup;
       // $watchCollection delegates to $watch, no extra processing necessary
       proto.$digest = instrumentedDigest;
       proto.$evalAsync = instrumentedEvalAsync;
       proto.$applyAsync = instrumentedApplyAsync;
+      proto.$$postDigest = instrumentedPostDigest;
       proto.$watch = instrumentedWatch;
       proto.$watchGroup = instrumentedWatchGroup;
 
@@ -209,6 +211,12 @@ angular.module('digestHud', [])
         // jshint validthis:true
         var timing = createTiming('$applyAsync(' + formatExpression(expression) + ')');
         originalApplyAsync.call(this, wrapExpression(expression, timing, 'handle', false, true));
+      }
+
+      function instrumentedPostDigest(fn) {
+        // jshint validthis:true
+        if (timingStack.length) fn = wrapExpression(fn, _.last(timingStack), 'handle', true, true);
+        originalPostDigest.call(this, fn);
       }
 
       function instrumentedWatch(watchExpression, listener, objectEquality) {
