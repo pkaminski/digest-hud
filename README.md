@@ -1,6 +1,6 @@
 # Angular Digest HUD
 
-Digest performance analysis HUD for AngularJS.  To turn it on for your app:
+Digest performance analysis HUD for AngularJS.  To turn it on for your app (requires [underscore.js](http://underscorejs.org/)):
 
 ```js
 angular.module('myApp', ['digestHud']).config(function(digestHudProvider) {
