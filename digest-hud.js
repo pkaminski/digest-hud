@@ -1,6 +1,6 @@
 angular.module('digestHud', [])
 
-.provider('digestHud', function($provide) {
+.provider('digestHud', ['$provide', function($provide) {
   'use strict';
 
   function WatchTiming(key) {
@@ -351,5 +351,5 @@ angular.module('digestHud', [])
   }
 
   this.$get = function() {};
-});
+}]);
 
