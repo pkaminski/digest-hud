@@ -17,7 +17,7 @@ The Digest HUD will have a performance impact on your code and there's no way to
 
 The numbers show the minimum, median, and maximum running time of the last 25 (or `numDigestStats`) digests.  At the end of the line a dot blinks on or off every time a digest runs.  Together this gives you a quick idea of how hard your app's digest cycle is working.
 
-You can click on the summary to show a snapshot of more detailed stats:
+You can click on the summary to show a snapshot of more detailed stats (this example is taken from [Reviewable](https://reviewable.io):
 
 ![collapsed Digest HUD](https://raw.githubusercontent.com/pkaminski/digest-hud/master/readme_images/expanded.png)
 
