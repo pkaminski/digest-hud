@@ -66,6 +66,7 @@ angular.module('digestHud', [])
   var overheadTiming = createTiming('$$ng-overhead');
   var digestHud = this;
   var inDigest = false;
+  var $parse;
 
   this.numTopWatches = 20;
   this.numDigestStats = 25;
@@ -222,12 +223,22 @@ angular.module('digestHud', [])
         originalPostDigest.call(this, fn);
       }
 
+      var watchTiming;
       function instrumentedWatch(watchExpression, listener, objectEquality) {
         // jshint validthis:true
-        var timing = createTiming(keyOverride || formatExpression(watchExpression));
-        return originalWatch.call(
-          this, wrapExpression(watchExpression, timing, 'watch', true, false),
-          wrapListener(listener, timing), objectEquality);
+        var watchTimingSet = false;
+        if (!watchTiming) {
+          // Capture watch timing (and its key) once, before we descend in $$watchDelegates.
+          watchTiming = createTiming(keyOverride || formatExpression(watchExpression));
+          watchTimingSet = true;
+        }
+        try {
+          return originalWatch.call(
+            this, wrapExpression(watchExpression, watchTiming, 'watch', true, false),
+            wrapListener(listener, watchTiming), objectEquality);
+        } finally {
+          if (watchTimingSet) watchTiming = null;
+        }
       }
 
       function instrumentedWatchGroup(watchExpressions, listener) {
@@ -313,11 +324,9 @@ angular.module('digestHud', [])
 
   function wrapExpression(expression, timing, counter, flushCycle, endCycle) {
     if (!expression && !flushCycle) return expression;
-    var actualExpression = expression;
-    if (_.isString(expression)) {
-      actualExpression = function(scope) {return scope.$eval(expression);};
-    }
-    return function instrumentedExpression() {
+    if (!$parse) angular.injector(['ng']).invoke(['$parse', function(parse) {$parse = parse;}]);
+    var actualExpression = _.isString(expression) ? $parse(expression) : expression;
+    var wrappedExpression = function instrumentedExpression() {
       if (flushCycle) flushTimingCycle();
       if (!actualExpression) return;
       if (!inDigest) return actualExpression.apply(this, arguments);
@@ -330,6 +339,12 @@ angular.module('digestHud', [])
         if (endCycle) timing.endCycle();
       }
     };
+    if (actualExpression) {
+      wrappedExpression.$$watchDelegate = actualExpression.$$watchDelegate;
+      wrappedExpression.$$inputs = actualExpression.$$inputs;
+      wrappedExpression.inputs = actualExpression.inputs;
+    }
+    return wrappedExpression;
   }
 
   function wrapListener(listener, timing) {
