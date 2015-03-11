@@ -240,7 +240,7 @@ angular.module('digestHud', [])
             }
             watchExpression = $parse(watchExpression);
           }
-          if (watchExpression.$$watchDelegate) {
+          if (watchExpression && watchExpression.$$watchDelegate) {
             return originalWatch.call(this, watchExpression, listener, objectEquality);
           } else {
             return originalWatch.call(
