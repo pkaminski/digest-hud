@@ -219,7 +219,7 @@ angular.module('digestHud', [])
 
       function instrumentedPostDigest(fn) {
         // jshint validthis:true
-        if (timingStack.length) {
+        if (timingStack && timingStack.length) {
           fn = wrapExpression(fn, _.last(timingStack), 'overhead', true, true);
         }
         originalPostDigest.call(this, fn);
