@@ -128,7 +128,7 @@ angular.module('digestHud', [])
       var grandTotal = 0, topTotal = 0;
       var topWatchTimings = _.chain(watchTimings).values()
         .each(function(timing) {timing.sum(); grandTotal += timing.total;})
-        .sortBy('total').reverse().first(digestHud.numTopWatches).value();
+        .sortBy('total').reverse().take(digestHud.numTopWatches).value();
       var lines = _.map(topWatchTimings, function(timing) {
         topTotal += timing.total;
         return timing.format(grandTotal);
