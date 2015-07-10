@@ -71,7 +71,7 @@ angular.module('digestHud', [])
   this.numTopWatches = 20;
   this.numDigestStats = 25;
 
-  this.enable = function() {
+  this.enable = function(hudPosition) {
     var toggle = false;
     var detailsText = '';
 
@@ -98,17 +98,24 @@ angular.module('digestHud', [])
     buttonsElement.find('#digestHud-reset').on('click', resetTimings);
     buttonsElement.on('click', function(ev) {ev.stopPropagation();});
     element.on('mousedown mouseup click', function(ev) {ev.stopPropagation();});
-    element.css({
-      position: 'fixed',
-      bottom: 0,
-      right: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.65)',
-      color: 'white',
-      padding: '2px 5px',
-      fontSize: 'small',
-      cursor: 'default',
-      zIndex: '1000000'
-    });
+
+    hudPosition = hudPosition || 'br';
+    var vertProp = /^t/i.test(hudPosition) ? 'top' : 'bottom',
+      horzProp = /l$/i.test(hudPosition) ? 'left' : 'right',
+      elementStyles = {
+        position: 'fixed',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        color: 'white',
+        padding: '2px 5px',
+        fontSize: 'small',
+        cursor: 'default',
+        zIndex: '1000000'
+      };
+
+    elementStyles[vertProp] = 0;
+    elementStyles[horzProp] = 0;
+    element.css(elementStyles);
+
     buttonsElement.css({
       float: 'right',
       display: 'none'
