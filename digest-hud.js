@@ -67,7 +67,8 @@ angular.module('digestHud', [])
   var digestHud = this;
   var inDigest = false;
   var hudElement;
-  var defaultHudPosition = ['bottom', 'right'];
+  var defaultHudPosition = 'bottom right';
+  var customHudPosition;
   var $parse;
 
   this.numTopWatches = 20;
@@ -113,7 +114,7 @@ angular.module('digestHud', [])
       zIndex: '1000000'
     });
 
-    setHudPosition();
+    setHudPosition(customHudPosition || defaultHudPosition);
 
     buttonsElement.css({
       float: 'right',
@@ -334,27 +335,21 @@ angular.module('digestHud', [])
   };
 
   function setHudPosition(position) {
-    if (position) {
-      var validOptions = ['top', 'right', 'bottom', 'left'];
-
-      // sanitize
-      position = ('' + position)
-        .replace(/\s{2,}/g, ' ')
-        .trim()
-        .toLowerCase()
-        .split(' ')
-        .filter(function(elem) {
-          return validOptions.indexOf(elem) !== -1;
-        });
+    if (hudElement) {
+      // reset all to defaults
+      var styles = {
+        top: auto,
+        right: auto,
+        bottom: auto,
+        left: auto
+      };
+      position = position ? '' + position : defaultHudPosition;
+      position.split(' ').map(function(prop) { styles[prop] = 0; });
+      hudElement.css(styles);
+    } else {
+      // save and apply on enabled
+      customHudPosition = position;
     }
-
-    if (!position || position.length < 2) {
-      position = defaultHudPosition;
-    }
-
-    var styles = {};
-    position.forEach(function(pos) { styles[pos] = 0; });
-    hudElement.css(styles);
   }
 
   function percentage(value) {
