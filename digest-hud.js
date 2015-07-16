@@ -66,6 +66,9 @@ angular.module('digestHud', [])
   var overheadTiming = createTiming('$$ng-overhead');
   var digestHud = this;
   var inDigest = false;
+  var hudElement;
+  var defaultHudPosition = 'bottom right';
+  var customHudPosition;
   var $parse;
 
   this.numTopWatches = 20;
@@ -75,33 +78,34 @@ angular.module('digestHud', [])
     var toggle = false;
     var detailsText = '';
 
-    var element = $('<div></div>');
+    hudElement = $('<div></div>');
     var buttonsElement = $(
       '<div>' +
       '<span id="digestHud-refresh">refresh</span> &bull; ' +
       '<span id="digestHud-reset">reset</span> ' +
-      '</div>').appendTo(element);
-    var summaryElement = $('<div></div>').appendTo(element);
-    var detailsElement = $('<div></div>').appendTo(element);
+      '</div>').appendTo(hudElement);
+    var summaryElement = $('<div></div>').appendTo(hudElement);
+    var detailsElement = $('<div></div>').appendTo(hudElement);
     var showDetails = false;
-    element.on('click', function() {
+    hudElement.on('click', function() {
       showDetails = !showDetails;
       buttonsElement.toggle(showDetails);
       detailsElement.toggle(showDetails);
       if (showDetails) refreshDetails();
     });
-    element.on('copy', function(ev) {
+
+    hudElement.on('copy', function(ev) {
       ev.originalEvent.clipboardData.setData('text/plain', detailsText);
       ev.preventDefault();
     });
+
     buttonsElement.find('#digestHud-refresh').on('click', refreshDetails);
     buttonsElement.find('#digestHud-reset').on('click', resetTimings);
     buttonsElement.on('click', function(ev) {ev.stopPropagation();});
-    element.on('mousedown mouseup click', function(ev) {ev.stopPropagation();});
-    element.css({
+
+    hudElement.on('mousedown mouseup click', function(ev) {ev.stopPropagation();});
+    hudElement.css({
       position: 'fixed',
-      bottom: 0,
-      right: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.65)',
       color: 'white',
       padding: '2px 5px',
@@ -109,6 +113,9 @@ angular.module('digestHud', [])
       cursor: 'default',
       zIndex: '1000000'
     });
+
+    setHudPosition(customHudPosition || defaultHudPosition);
+
     buttonsElement.css({
       float: 'right',
       display: 'none'
@@ -122,7 +129,7 @@ angular.module('digestHud', [])
       maxWidth: '50em',
       display: 'none'
     });
-    $('body').append(element);
+    $('body').append(hudElement);
 
     function refreshDetails() {
       var grandTotal = 0, topTotal = 0;
@@ -326,6 +333,24 @@ angular.module('digestHud', [])
       return result;
     };
   };
+
+  function setHudPosition(position) {
+    if (hudElement) {
+      // reset all to defaults
+      var styles = {
+        top: auto,
+        right: auto,
+        bottom: auto,
+        left: auto
+      };
+      position = position ? '' + position : defaultHudPosition;
+      position.split(' ').map(function(prop) { styles[prop] = 0; });
+      hudElement.css(styles);
+    } else {
+      // save and apply on enabled
+      customHudPosition = position;
+    }
+  }
 
   function percentage(value) {
     if (value >= 1) return (value * 100).toFixed(1) + '%';
