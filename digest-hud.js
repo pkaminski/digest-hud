@@ -338,10 +338,10 @@ angular.module('digestHud', [])
     if (hudElement) {
       // reset all to defaults
       var styles = {
-        top: auto,
-        right: auto,
-        bottom: auto,
-        left: auto
+        top: 'auto',
+        right: 'auto',
+        bottom: 'auto',
+        left: 'auto'
       };
       position = position ? '' + position : defaultHudPosition;
       position.split(' ').map(function(prop) { styles[prop] = 0; });
