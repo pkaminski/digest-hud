@@ -114,7 +114,7 @@ angular.module('digestHud', [])
       zIndex: '1000000'
     });
 
-    setHudPosition(customHudPosition || defaultHudPosition);
+    this.setHudPosition(customHudPosition || defaultHudPosition);
 
     buttonsElement.css({
       float: 'right',
@@ -334,7 +334,7 @@ angular.module('digestHud', [])
     };
   };
 
-  function setHudPosition(position) {
+  this.setHudPosition = function(position) {
     if (hudElement) {
       // reset all to defaults
       var styles = {
@@ -350,7 +350,7 @@ angular.module('digestHud', [])
       // save and apply on enabled
       customHudPosition = position;
     }
-  }
+  };
 
   function percentage(value) {
     if (value >= 1) return (value * 100).toFixed(1) + '%';
