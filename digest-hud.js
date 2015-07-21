@@ -38,7 +38,7 @@ angular.module('digestHud', [])
     this.cycleStart = null;
     timingStack.pop();
     if (timingStack.length) {
-      _.last(timingStack).subTotal += duration;
+      timingStack[timingStack.length - 1].subTotal += duration;
     } else {
       overheadTiming.overhead -= duration;
     }
@@ -57,7 +57,7 @@ angular.module('digestHud', [])
   };
 
   function flushTimingCycle() {
-    if (timingStack.length) _.last(timingStack).endCycle();
+    if (timingStack.length) timingStack[timingStack.length - 1].endCycle();
   }
 
   var digestTimings = [];
@@ -133,14 +133,22 @@ angular.module('digestHud', [])
 
     function refreshDetails() {
       var grandTotal = 0, topTotal = 0;
-      var topWatchTimings = _.chain(watchTimings).values()
-        .each(function(timing) {timing.sum(); grandTotal += timing.total;})
-        .sortBy('total').reverse().take(digestHud.numTopWatches).value();
-      var lines = _.map(topWatchTimings, function(timing) {
+
+      var topWatchTimings = Object.keys(watchTimings).map(function(k){
+        return watchTimings[k];
+      }).map(function(timing) {
+        timing.sum(); grandTotal += timing.total;
+        return timing;
+      }).sort(function(a, b) {
+        var x = a.total; var y = b.total;
+         return ((x < y) ? 1 : ((x > y) ? -1 : 0));
+      }).slice(0, digestHud.numTopWatches);
+
+      var lines = topWatchTimings.map(function(timing) {
         topTotal += timing.total;
         return timing.format(grandTotal);
       });
-      var rows = _.map(lines, function(text) {
+      var rows = lines.map(function(text) {
         var row = $('<div></div>');
         row.css({
           overflow: 'hidden',
@@ -157,14 +165,19 @@ angular.module('digestHud', [])
       var footer = 'Top ' + topWatchTimings.length + ' items account for ' +
         percentage(topTotal / grandTotal) + ' of ' + grandTotal + 'ms of digest processing time.';
       $('<div></div>').text(footer).appendTo(detailsElement);
-      detailsText = 'Total  Watch   Work Overhead  Function\n' + _.map(lines, function(text) {
+      detailsText = 'Total  Watch   Work Overhead  Function\n' + lines.map(function(text) {
         return text.replace(/[ \n]+/g, ' ');
       }).join('\n') + '\n' + footer + '\n';
     }
 
     function resetTimings() {
       digestTimings = [];
-      _.invoke(watchTimings, 'reset');
+
+      Object.keys(watchTimings).map(function(k){
+        return watchTimings[k];
+      }).forEach(function(watchTiming) {
+        watchTiming.reset();
+      });
     }
 
     $provide.decorator('$rootScope', ['$delegate', function($delegate) {
@@ -202,7 +215,7 @@ angular.module('digestHud', [])
         digestTimings.push(duration);
         if (digestTimings.length > digestHud.numDigestStats) digestTimings.shift();
         var len = digestTimings.length;
-        var sorted = _.sortBy(digestTimings);
+        var sorted = digestTimings.slice().sort();
         var median = len % 2 ?
           sorted[(len - 1) / 2] : Math.round((sorted[len / 2] + sorted[len / 2 - 1]) / 2);
         var description =
@@ -227,7 +240,7 @@ angular.module('digestHud', [])
       function instrumentedPostDigest(fn) {
         // jshint validthis:true
         if (timingStack.length) {
-          fn = wrapExpression(fn, _.last(timingStack), 'overhead', true, true);
+          fn = wrapExpression(fn, timingStack[timingStack.length - 1], 'overhead', true, true);
         }
         originalPostDigest.call(this, fn);
       }
@@ -241,7 +254,7 @@ angular.module('digestHud', [])
           watchTimingSet = true;
         }
         try {
-          if (_.isString(watchExpression)) {
+          if (angular.isString(watchExpression)) {
             if (!$parse) {
               angular.injector(['ng']).invoke(['$parse', function(parse) {$parse = parse;}]);
             }
@@ -266,7 +279,7 @@ angular.module('digestHud', [])
           // $watchGroup delegates to $watch for each expression, so just make sure to set the group's
           // aggregate key as the override first.
           watchTiming = createTiming(
-            '[' + _.map(watchExpressions, formatExpression).join(', ') + ']');
+            '[' + watchExpressions.map(formatExpression).join(', ') + ']');
           watchTimingSet = true;
         }
         try {
@@ -282,7 +295,7 @@ angular.module('digestHud', [])
     $provide.decorator('$parse', ['$delegate', function($delegate) {
       return function(expression) {
         var result = $delegate.apply(this, arguments);
-        if (_.isString(expression)) result.exp = expression;
+        if (angular.isString(expression)) result.exp = expression;
         return result;
       };
     }]);
@@ -359,8 +372,8 @@ angular.module('digestHud', [])
 
   function formatExpression(watchExpression) {
     if (!watchExpression) return '';
-    if (_.isString(watchExpression)) return watchExpression;
-    if (_.isString(watchExpression.exp)) return watchExpression.exp;
+    if (angular.isString(watchExpression)) return watchExpression;
+    if (angular.isString(watchExpression.exp)) return watchExpression.exp;
     if (watchExpression.name) return 'function ' + watchExpression.name + '() {\u2026}';
     return watchExpression.toString();
   }
@@ -368,7 +381,7 @@ angular.module('digestHud', [])
   function wrapExpression(expression, timing, counter, flushCycle, endCycle) {
     if (!expression && !flushCycle) return expression;
     if (!$parse) angular.injector(['ng']).invoke(['$parse', function(parse) {$parse = parse;}]);
-    var actualExpression = _.isString(expression) ? $parse(expression) : expression;
+    var actualExpression = angular.isString(expression) ? $parse(expression) : expression;
     return function instrumentedExpression() {
       if (flushCycle) flushTimingCycle();
       if (!actualExpression) return;
