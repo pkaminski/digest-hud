@@ -215,7 +215,7 @@ angular.module('digestHud', [])
         digestTimings.push(duration);
         if (digestTimings.length > digestHud.numDigestStats) digestTimings.shift();
         var len = digestTimings.length;
-        var sorted = digestTimings.slice().sort();
+        var sorted = digestTimings.slice().sort(function(a, b) {return a - b;});
         var median = len % 2 ?
           sorted[(len - 1) / 2] : Math.round((sorted[len / 2] + sorted[len / 2 - 1]) / 2);
         var description =
