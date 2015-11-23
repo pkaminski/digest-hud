@@ -78,19 +78,22 @@ angular.module('digestHud', [])
     var toggle = false;
     var detailsText = '';
 
-    hudElement = $('<div></div>');
-    var buttonsElement = $(
+    hudElement = angular.element('<div></div>');
+    var buttonsElement = angular.element(
       '<div>' +
       '<span id="digestHud-refresh">refresh</span> &bull; ' +
       '<span id="digestHud-reset">reset</span> ' +
-      '</div>').appendTo(hudElement);
-    var summaryElement = $('<div></div>').appendTo(hudElement);
-    var detailsElement = $('<div></div>').appendTo(hudElement);
+      '</div>');
+    hudElement.append(buttonsElement);
+    var summaryElement = angular.element('<div></div>');
+    hudElement.append(summaryElement);
+    var detailsElement = angular.element('<div></div>');
+    hudElement.append(detailsElement);
     var showDetails = false;
     hudElement.on('click', function() {
       showDetails = !showDetails;
-      buttonsElement.toggle(showDetails);
-      detailsElement.toggle(showDetails);
+      buttonsElement[0].style.display = showDetails ? '' : 'none';
+      detailsElement[0].style.display = showDetails ? '' : 'none';
       if (showDetails) refreshDetails();
     });
 
@@ -129,7 +132,7 @@ angular.module('digestHud', [])
       maxWidth: '50em',
       display: 'none'
     });
-    $('body').append(hudElement);
+    angular.element(document.body).append(hudElement);
 
     function refreshDetails() {
       var grandTotal = 0, topTotal = 0;
@@ -149,7 +152,7 @@ angular.module('digestHud', [])
         return timing.format(grandTotal);
       });
       var rows = lines.map(function(text) {
-        var row = $('<div></div>');
+        var row = angular.element('<div></div>');
         row.css({
           overflow: 'hidden',
           textOverflow: 'ellipsis'
@@ -159,12 +162,16 @@ angular.module('digestHud', [])
         return row;
       });
       detailsElement.empty();
-      $('<div>\u2007Total\u2007\u2007\u2007Watch\u2007Work\u2007Overhead\u2007\u2007Function</div>')
-        .css({borderBottom: '1px solid'}).appendTo(detailsElement);
-      detailsElement.append(rows);
+      var headerElement = angular.element('<div>\u2007Total\u2007\u2007\u2007Watch\u2007Work\u2007Overhead\u2007\u2007Function</div>')
+        .css({borderBottom: '1px solid'});
+      detailsElement.append(headerElement);
+      rows.forEach(function(row) {
+        detailsElement.append(row);
+      });
       var footer = 'Top ' + topWatchTimings.length + ' items account for ' +
         percentage(topTotal / grandTotal) + ' of ' + grandTotal + 'ms of digest processing time.';
-      $('<div></div>').text(footer).appendTo(detailsElement);
+      var footerElement = angular.element('<div></div>').text(footer);
+      detailsElement.append(footerElement);
       detailsText = 'Total  Watch   Work Overhead  Function\n' + lines.map(function(text) {
         return text.replace(/[ \n]+/g, ' ');
       }).join('\n') + '\n' + footer + '\n';
