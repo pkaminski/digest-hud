@@ -3,14 +3,14 @@
 Digest performance analysis HUD for AngularJS.
 
 ```js
-angular.module('myApp', ['digestHud']).config(function(digestHudProvider) {
+angular.module('myApp', ['digestHud']).config(['digestHudProvider', function(digestHudProvider) {
   digestHudProvider.enable();
     
   // Optional configuration settings:
   digestHudProvider.setHudPosition('top right'); // setup hud position on the page: top right, bottom left, etc. corner
   digestHudProvider.numTopWatches = 20;  // number of items to display in detailed table
   digestHudProvider.numDigestStats = 25;  // number of most recent digests to use for min/med/max stats
-});
+}]);
 ```
 
 The Digest HUD will have a performance impact on your code and there's no way to disable it once enabled, so as a rule you probably don't want to turn it on in production.  When it's enabled you'll see a small digest summary fixed in the lower-right corner of the window:
