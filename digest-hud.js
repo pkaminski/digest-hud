@@ -190,14 +190,18 @@ angular.module('digestHud', [])
 
     $provide.decorator('$rootScope', ['$delegate', function($delegate) {
       var proto = Object.getPrototypeOf($delegate);
-      var originalDigest = proto.$digest;
+      var originalDigest = proto.$digest.original || proto.$digest;
       var originalEvalAsync = proto.$evalAsync;
       var originalApplyAsync = proto.$applyAsync;
       var originalPostDigest = proto.$$postDigest;
       var originalWatch = proto.$watch;
       var originalWatchGroup = proto.$watchGroup;
       // $watchCollection delegates to $watch, no extra processing necessary
-      proto.$digest = instrumentedDigest;
+      if (proto.$digest.original) {
+        proto.$digest.original = instrumentedDigest;
+      } else {
+        proto.$digest = instrumentedDigest;
+      }
       proto.$evalAsync = instrumentedEvalAsync;
       proto.$applyAsync = instrumentedApplyAsync;
       proto.$$postDigest = instrumentedPostDigest;
