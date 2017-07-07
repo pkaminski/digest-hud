@@ -305,6 +305,7 @@ angular.module('digestHud', [])
     }]);
 
     $provide.decorator('$parse', ['$delegate', function($delegate) {
+      $parse = $delegate;
       return function(expression) {
         var result = $delegate.apply(this, arguments);
         if (angular.isString(expression)) result.exp = expression;
@@ -429,4 +430,3 @@ angular.module('digestHud', [])
 
   this.$get = function() {};
 }]);
-
