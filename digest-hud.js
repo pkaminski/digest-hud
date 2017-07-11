@@ -267,9 +267,6 @@ angular.module('digestHud', [])
         }
         try {
           if (angular.isString(watchExpression)) {
-            if (!$parse) {
-              angular.injector(['ng']).invoke(['$parse', function(parse) {$parse = parse;}]);
-            }
             watchExpression = $parse(watchExpression);
           }
           if (watchExpression && watchExpression.$$watchDelegate) {
@@ -305,6 +302,7 @@ angular.module('digestHud', [])
     }]);
 
     $provide.decorator('$parse', ['$delegate', function($delegate) {
+      $parse = $delegate;
       return function(expression) {
         var result = $delegate.apply(this, arguments);
         if (angular.isString(expression)) result.exp = expression;
@@ -392,7 +390,6 @@ angular.module('digestHud', [])
 
   function wrapExpression(expression, timing, counter, flushCycle, endCycle) {
     if (!expression && !flushCycle) return expression;
-    if (!$parse) angular.injector(['ng']).invoke(['$parse', function(parse) {$parse = parse;}]);
     var actualExpression = angular.isString(expression) ? $parse(expression) : expression;
     return function instrumentedExpression() {
       if (flushCycle) flushTimingCycle();
@@ -429,4 +426,3 @@ angular.module('digestHud', [])
 
   this.$get = function() {};
 }]);
-
