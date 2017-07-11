@@ -1,7 +1,7 @@
 {
   "name": "angular-digest-hud",
   "main": "digest-hud.js",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "homepage": "https://github.com/pkaminski/digest-hud",
   "authors": [
     "Piotr Kaminski <piotr@ideanest.com>"
