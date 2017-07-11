@@ -43,7 +43,7 @@ angular.module('digestHud', [])
       overheadTiming.overhead -= duration;
     }
   };
-
+ 
   WatchTiming.prototype.sum = function() {
     this.total = this.watch + this.handle + this.overhead;
   };
@@ -61,6 +61,8 @@ angular.module('digestHud', [])
   }
 
   var digestTimings = [];
+  var acc = 0;
+  var qtd = 0;
   var watchTimings = {};
   var timingStack;
   var overheadTiming = createTiming('$$ng-overhead');
@@ -180,6 +182,8 @@ angular.module('digestHud', [])
 
     function resetTimings() {
       digestTimings = [];
+      acc = 0;
+      qtd = 0;
 
       Object.keys(watchTimings).map(function(k){
         return watchTimings[k];
@@ -187,8 +191,9 @@ angular.module('digestHud', [])
         watchTiming.reset();
       });
     }
-
-    $provide.decorator('$rootScope', ['$delegate', function($delegate) {
+    
+    $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
+      var noop = function() {};
       var proto = Object.getPrototypeOf($delegate);
       var originalDigest = proto.$digest.original || proto.$digest;
       var originalEvalAsync = proto.$evalAsync;
@@ -225,13 +230,15 @@ angular.module('digestHud', [])
         overheadTiming.overhead += duration;
         toggle = !toggle;
         digestTimings.push(duration);
+        acc += duration;
+        qtd++;
         if (digestTimings.length > digestHud.numDigestStats) digestTimings.shift();
         var len = digestTimings.length;
         var sorted = digestTimings.slice().sort(function(a, b) {return a - b;});
         var median = len % 2 ?
           sorted[(len - 1) / 2] : Math.round((sorted[len / 2] + sorted[len / 2 - 1]) / 2);
         var description =
-          'digest ' + sorted[0] + 'ms ' + median + 'ms ' + sorted[len - 1] + 'ms ' +
+          'digest ' + sorted[0] + 'ms ' + median + 'ms ' + sorted[len - 1] + 'ms (total:' + acc + 'ms in ' + qtd + ' times) ' +
           (toggle ? '\u25cf' : '\u25cb');
         summaryElement.text(description);
       }
@@ -381,11 +388,23 @@ angular.module('digestHud', [])
   }
 
   function formatExpression(watchExpression) {
-    if (!watchExpression) return '';
-    if (angular.isString(watchExpression)) return watchExpression;
-    if (angular.isString(watchExpression.exp)) return watchExpression.exp;
-    if (watchExpression.name) return 'function ' + watchExpression.name + '() {\u2026}';
-    return watchExpression.toString();
+    if (!watchExpression)                      return 'empty';
+    if (angular.isString(watchExpression))
+    {
+        var pos = watchExpression.indexOf("(");
+        if(pos >=0) watchExpression = watchExpression.slice(0, pos) + '() {\u2026}';
+        return 'str: ' + watchExpression;
+    }
+    if (angular.isString(watchExpression.exp)) {
+        var exp = watchExpression.exp;
+        var pos = exp.indexOf("|");
+        if(pos >=0) {
+            exp = exp.slice(pos, exp.indexOf("}") -1);
+        }
+        return 'exp: ' + exp;
+    }
+    if (watchExpression.name)                  return 'function ' + watchExpression.name + '() {\u2026}';
+    return 'anonymous: ' + watchExpression.toString();
   }
 
   function wrapExpression(expression, timing, counter, flushCycle, endCycle) {
